@@ -1,4 +1,8 @@
 Engine\KeyListener.class
-error\gameengine\Main.class
+Engine\LevelEditorScene.class
+Engine\Main.class
+Engine\Scene.class
+Engine\LevelScene.class
+util\Time.class
 Engine\Window.class
 Engine\MouseListener.class

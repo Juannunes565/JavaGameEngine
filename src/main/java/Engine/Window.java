@@ -32,11 +32,20 @@ public class Window {
     private long glfwWindow;
     
     private static Window window;
+        
+    private static Scene currentScene;
+    
+    public float r, g, b, a;
+    
     
     private Window(){
-        this.width = 1920;
-        this.height = 1080;
-        this.title = "Mario";
+        this.width = 720;
+        this.height = 480;
+        this.title = "GameTest"; 
+        this.r = 1;
+        this.b = 1;
+        this.g = 1;
+        this.a = 1;
     }
     
     public static Window get(){
@@ -45,6 +54,23 @@ public class Window {
         }
         
         return Window.window;
+    }
+    
+    
+    public static void changeScene(int newScene){
+        switch(newScene){
+            case 0:
+                currentScene = new LevelEditorScene();
+                currentScene.init();
+                break;
+            case 1:
+                currentScene = new LevelScene();
+                currentScene.init();
+                break;
+            default:
+                assert false: "Escena desconocida: " + newScene;
+                break;
+        }
     }
     
     
@@ -78,7 +104,7 @@ public class Window {
         GLFW.glfwDefaultWindowHints();
         GLFW.glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         GLFW.glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-        GLFW.glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+        GLFW.glfwWindowHint(GLFW_MAXIMIZED, GLFW_FALSE);
         
         //Crear la ventana
         glfwWindow = GLFW.glfwCreateWindow(this.width, this.height, this.title, NULL, NULL);
@@ -100,22 +126,76 @@ public class Window {
         //Esta linea es importante (Todavia no se porque)
         GL.createCapabilities();
         
+        Window.changeScene(0);
+        
     }
     
     
     public void loop(){
         float beginTime = Time.getTime();
         float endTime = Time.getTime();
-        
+        float dt = -1.0f;
         
         while(!GLFW.glfwWindowShouldClose(glfwWindow)){
             //Poll events
             
             GLFW.glfwPollEvents();
-            GL11.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+            GL11.glClearColor(r, g, b, a);
             GL11.glClear(GL_COLOR_BUFFER_BIT);
            
             GLFW.glfwSwapBuffers(glfwWindow);
+            
+            currentScene.update(dt);
+            
+            if(dt >= 0){
+                currentScene.update(dt);
+            }
+            
+            endTime = Time.getTime();
+            dt = endTime - beginTime;
+            beginTime = endTime;
         }
+        
+        
     }
+    
+    
+    
+    
+    
+    //Getters y Setters
+    public float getR() {
+        return r;
+    }
+
+    public void setR(float r) {
+        this.r = r;
+    }
+
+    public float getG() {
+        return g;
+    }
+
+    public void setG(float g) {
+        this.g = g;
+    }
+
+    public float getB() {
+        return b;
+    }
+
+    public void setB(float b) {
+        this.b = b;
+    }
+
+    public float getA() {
+        return a;
+    }
+
+    public void setA(float a) {
+        this.a = a;
+    }
+    
+    
+    
 }
