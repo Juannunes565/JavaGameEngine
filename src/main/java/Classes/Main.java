@@ -4,6 +4,9 @@
  */
 package Classes;
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11;
 /**
  *
  * @author Juan
@@ -24,11 +27,32 @@ public class Main {
             throw new IllegalStateException("Error al crear la ventana");
         }
         
-        glfwShowWindow(window);
+        glfwShowWindow(window);    
+        
+        glfwMakeContextCurrent(window);
+        GL.createCapabilities();
         
         //Game Loop
         while(!glfwWindowShouldClose(window)){
-            glfwPollEvents();
+            glfwPollEvents();            
+            glfwSwapBuffers(window);
+            
+            glClear(GL_COLOR_BUFFER_BIT);
+            
+            glBegin(GL_QUADS);
+                glColor4f(1, 0, 0, 0);
+                glVertex2f(-0.5f, 0.5f);
+                
+                glColor4f(0, 1, 0, 0);
+                glVertex2f(0.5f, 0.5f);
+                
+                glColor4f(1, 0, 1, 0);
+                glVertex2f(0.5f, -0.5f);
+                
+                glColor4f(1, 1, 1, 0);
+                glVertex2f(-0.5f, -0.5f);
+            glEnd();
+            
         }
         
         glfwTerminate(); //Libera los recursos de SO
