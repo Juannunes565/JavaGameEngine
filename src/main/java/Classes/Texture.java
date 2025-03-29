@@ -1,0 +1,68 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package Classes;
+
+
+import static org.lwjgl.opengl.GL11.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.nio.ByteBuffer;
+import javax.imageio.ImageIO;
+import org.lwjgl.BufferUtils;
+
+/**
+ *
+ * @author Juan
+ */
+public class Texture {
+    private int id;
+    private int width;
+    private int height;
+    
+    
+    public Texture(String filename){
+        BufferedImage image;
+        try{
+            image = ImageIO.read(new File(filename));
+            width = image.getWidth();
+            height = image.getHeight();
+            
+            int[] pixels_raw = new int[height * width * 4];
+            pixels_raw = image.getRGB(0, 0, width, height, null, 0, width);
+            
+            ByteBuffer pixels = BufferUtils.createByteBuffer(width * height * 4);
+            
+            for (int i = 0; i < width; i++) {
+                for (int j = 0; j < height; j++) {
+                    int pixel = pixels_raw[i*width + j];
+                    pixels.put((byte)((pixel >> 16) & 0xFF)); //RED
+                    pixels.put((byte)((pixel >> 8) & 0xFF)); //GREEN
+                    pixels.put((byte)(pixel & 0xFF)); //BLUE
+                    pixels.put((byte)((pixel >> 24) & 0xFF)); //ALPHA                                        
+                }
+            }
+            
+            pixels.flip();
+            
+            id = glGenTextures();
+            
+            glBindTexture(GL_TEXTURE_2D, id);
+            
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        }
+        catch(Exception e){
+            System.out.println(e);
+        }
+        
+        
+        
+    }
+    
+    public void bind(){
+        glBindTexture(GL_TEXTURE_2D, id);
+    }
+}

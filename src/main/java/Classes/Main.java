@@ -4,6 +4,7 @@
  */
 package Classes;
 import static org.lwjgl.glfw.GLFW.*;
+import org.lwjgl.glfw.GLFWKeyCallback;
 import static org.lwjgl.opengl.GL11.*;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
@@ -30,27 +31,50 @@ public class Main {
         glfwShowWindow(window);    
         
         glfwMakeContextCurrent(window);
+        
         GL.createCapabilities();
         
+        glEnable(GL_TEXTURE_2D);
+        
+        Texture texture = new Texture("assets\\face.png");
+        
         //Game Loop
+        float x = 0;
+        float y = 0;
         while(!glfwWindowShouldClose(window)){
             glfwPollEvents();            
             glfwSwapBuffers(window);
+                      
+            
+            if(glfwGetKey(window, GLFW_KEY_A) == GL_TRUE){
+                x -= 0.001f;                
+            }
+            if(glfwGetKey(window, GLFW_KEY_W) == GL_TRUE){
+                y += 0.001f;                
+            }
+            if(glfwGetKey(window, GLFW_KEY_S) == GL_TRUE){
+                y -= 0.001f;                
+            }
+            if(glfwGetKey(window, GLFW_KEY_D) == GL_TRUE){
+                x += 0.001f;                
+            }                        
             
             glClear(GL_COLOR_BUFFER_BIT);
             
+            texture.bind();
+            
             glBegin(GL_QUADS);
-                glColor4f(1, 0, 0, 0);
-                glVertex2f(-0.5f, 0.5f);
+                glTexCoord2f(0, 0);
+                glVertex2f(-0.5f+x, 0.5f+y);
                 
-                glColor4f(0, 1, 0, 0);
-                glVertex2f(0.5f, 0.5f);
+                glTexCoord2f(1, 0);
+                glVertex2f(0.5f+x, 0.5f+y);
                 
-                glColor4f(1, 0, 1, 0);
-                glVertex2f(0.5f, -0.5f);
+                glTexCoord2f(1, 1);
+                glVertex2f(0.5f+x, -0.5f+y);
                 
-                glColor4f(1, 1, 1, 0);
-                glVertex2f(-0.5f, -0.5f);
+                glTexCoord2f(0, 1);
+                glVertex2f(-0.5f+x, -0.5f+y);
             glEnd();
             
         }
