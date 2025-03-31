@@ -1,6 +1,7 @@
 package Classes;
 
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import org.lwjgl.BufferUtils;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -11,6 +12,7 @@ import org.lwjgl.opengl.GL;
 
 public class Main {
     public static void main(String[] args) {
+        
         if (!glfwInit()) {
             throw new IllegalStateException("Error al iniciar GLFW");
         }
@@ -30,9 +32,15 @@ public class Main {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Establece el color de fondo
 
         float[] vertices = {
-            -0.5f, -0.5f, 0.0f,
-             0.5f, -0.5f, 0.0f,
-             0.0f,  0.5f, 0.0f
+            0.5f,  0.5f, 0.0f,  // top right
+            0.5f, -0.5f, 0.0f,  // bottom right
+           -0.5f, -0.5f, 0.0f,  // bottom left
+           -0.5f,  0.5f, 0.0f   // top left
+        };
+        
+        int[] indices = {
+            0, 1, 3,
+            1, 2, 3
         };
 
         int VAO = glGenVertexArrays();
@@ -41,9 +49,16 @@ public class Main {
         int VBO = glGenBuffers();
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         
+        int EBO = glGenBuffers();
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        
         FloatBuffer verticesBuffer = BufferUtils.createFloatBuffer(vertices.length);
         verticesBuffer.put(vertices).flip();
         glBufferData(GL_ARRAY_BUFFER, verticesBuffer, GL_STATIC_DRAW);
+        
+        IntBuffer indicesBuffer = BufferUtils.createIntBuffer(indices.length);
+        indicesBuffer.put(indices).flip();
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL_STATIC_DRAW);
 
         String vertexShaderSource = "#version 330 core\n"
                 + "layout (location = 0) in vec3 aPos;\n"
@@ -98,7 +113,8 @@ public class Main {
             
             glUseProgram(shaderProgram);
             glBindVertexArray(VAO);
-            glDrawArrays(GL_TRIANGLES, 0, 3);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
 
             glfwSwapBuffers(window);
         }
