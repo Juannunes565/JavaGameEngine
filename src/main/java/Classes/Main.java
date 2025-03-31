@@ -1,5 +1,6 @@
 package Classes;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import org.lwjgl.BufferUtils;
@@ -9,8 +10,18 @@ import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.stb.STBImage;
+import org.lwjgl.system.MemoryStack;
 
 public class Main {
+    
+    private static float[] textCoords = {
+        0.0f,  0.0f,
+        1.0f,  0.0f,
+        0.5f,  1.0f
+    };
+    
+    
     public static void main(String[] args) {
         
         if (!glfwInit()) {
@@ -31,17 +42,12 @@ public class Main {
         glViewport(0, 0, 640, 480);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Establece el color de fondo
 
-        float[] vertices = {
-            0.5f,  0.5f, 0.0f,  // top right
-            0.5f, -0.5f, 0.0f,  // bottom right
-           -0.5f, -0.5f, 0.0f,  // bottom left
-           -0.5f,  0.5f, 0.0f   // top left
+        float[] vertices = {                    
+             0.0f,  0.5f, 0.0f,    1.0f, 0.0f, 0.0f,     0.5f, 0.0f,
+            -0.5f, -0.5f, 0.0f,    0.0f, 1.0f, 0.0f,     0.0f, 1.0f,
+             0.5f, -0.5f, 0.0f,    0.0f, 0.0f, 1.0f,     1.0f, 1.0f 
         };
         
-        int[] indices = {
-            0, 1, 3,
-            1, 2, 3
-        };
 
         int VAO = glGenVertexArrays();
         glBindVertexArray(VAO);
@@ -49,71 +55,76 @@ public class Main {
         int VBO = glGenBuffers();
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         
-        int EBO = glGenBuffers();
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         
         FloatBuffer verticesBuffer = BufferUtils.createFloatBuffer(vertices.length);
         verticesBuffer.put(vertices).flip();
-        glBufferData(GL_ARRAY_BUFFER, verticesBuffer, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, verticesBuffer, GL_STATIC_DRAW);                      
+
         
-        IntBuffer indicesBuffer = BufferUtils.createIntBuffer(indices.length);
-        indicesBuffer.put(indices).flip();
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL_STATIC_DRAW);
-
-        String vertexShaderSource = "#version 330 core\n"
-                + "layout (location = 0) in vec3 aPos;\n"
-                + "void main()\n"
-                + "{\n"
-                + "    gl_Position = vec4(aPos, 1.0);\n"
-                + "}";
-
-        int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, vertexShaderSource);
-        glCompileShader(vertexShader);
-        if (glGetShaderi(vertexShader, GL_COMPILE_STATUS) == GL_FALSE) {
-            System.err.println("Error en Vertex Shader: " + glGetShaderInfoLog(vertexShader));
-            return;
-        }
-
-        String fragmentShaderSource = "#version 330 core\n"
-                + "out vec4 FragColor;\n"
-                + "void main()\n"
-                + "{\n"
-                + "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                + "}";
-
-        int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, fragmentShaderSource);
-        glCompileShader(fragmentShader);
-        if (glGetShaderi(fragmentShader, GL_COMPILE_STATUS) == GL_FALSE) {
-            System.err.println("Error en Fragment Shader: " + glGetShaderInfoLog(fragmentShader));
-            return;
-        }
-
-        int shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glLinkProgram(shaderProgram);
-        if (glGetProgrami(shaderProgram, GL_LINK_STATUS) == GL_FALSE) {
-            System.err.println("Error al enlazar Shader Program: " + glGetProgramInfoLog(shaderProgram));
-            return;
-        }
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * Float.BYTES, 0);
         glEnableVertexAttribArray(0);
+        
+        glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * Float.BYTES, 3 * Float.BYTES);
+        glEnableVertexAttribArray(1);
+        
+        glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
+        glEnableVertexAttribArray(2); 
+        
+        
+        //============Cargar textura===============
+        
+        // Crear un stack de memoria para manejar buffers de forma eficiente
+        int texture;
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer width = stack.mallocInt(1);
+            IntBuffer height = stack.mallocInt(1);
+            IntBuffer channels = stack.mallocInt(1);
+            String path = "assets\\face.png";
 
-        // Game Loop
+            // Cargar la imagen con STBImage
+            ByteBuffer image = STBImage.stbi_load(path, width, height, channels, 4);
+            if (image == null) {
+                throw new RuntimeException("Error al cargar la imagen " + path + ": " + STBImage.stbi_failure_reason());
+            }
+
+            // Generar la textura en OpenGL
+            texture = glGenTextures();
+            glBindTexture(GL_TEXTURE_2D, texture);
+
+            // Configurar los parámetros de la textura
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            // Subir los datos de la imagen a la textura de OpenGL
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width.get(0), height.get(0), 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+            glGenerateMipmap(GL_TEXTURE_2D);
+
+            // Liberar la imagen en STB
+            STBImage.stbi_image_free(image);
+        }
+        
+        
+        
+        
+
+        
+        Shader newShader = new Shader("shaders\\shaderExample.vert", "shaders\\shaderExample.frag");
+        
+        // Game Loop            
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
 
-            glClear(GL_COLOR_BUFFER_BIT); // Limpia la pantalla en cada iteración
-            
-            glUseProgram(shaderProgram);
+            glClear(GL_COLOR_BUFFER_BIT); 
+                                    
+            float greenValue = (float) ((Math.sin(glfwGetTime()) / 2.0f) + 0.5f);            
+            int vertexColorLocation = glGetUniformLocation(newShader.getID(), "ourColor");
+            glUseProgram(newShader.getID());            
+            glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 0.0f);
+                        
             glBindVertexArray(VAO);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            glDrawArrays(GL_TRIANGLES, 0, 3);
             glBindVertexArray(0);
 
             glfwSwapBuffers(window);
@@ -122,7 +133,7 @@ public class Main {
         // Cleanup
         glDeleteVertexArrays(VAO);
         glDeleteBuffers(VBO);
-        glDeleteProgram(shaderProgram);
+        newShader.deleteShader();
 
         glfwTerminate();
     }
