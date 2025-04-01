@@ -105,16 +105,12 @@ public class Main {
         
         // Crear una matriz identidad
         Matrix4f trans = new Matrix4f().identity();
-
-        trans.translate(0.0f, 0.0f, 0.0f);
-        trans.rotate((float) Math.toRadians(90.0), new Vector3f(0.0f, 0.0f, 1.0f));
-        trans.scale(0.5f, 0.5f, 0.5f);
+        
         
         
         Shader newShader = new Shader("shaders\\shaderExample.vert", "shaders\\shaderExample.frag");
                 
         float[] matrixArray = new float[16];
-        trans.get(matrixArray);
         
         
         // Game Loop            
@@ -123,7 +119,11 @@ public class Main {
 
             glClear(GL_COLOR_BUFFER_BIT); 
                                                                         
-            glUseProgram(newShader.getID());                        
+            glUseProgram(newShader.getID());   
+            
+            trans.rotate((float) Math.toRadians(0.06), new Vector3f(0.0f, 0.0f, 1.0f));        
+            trans.get(matrixArray);
+            
             int transLocation = glGetUniformLocation(newShader.getID(), "transform");        
             glUniformMatrix4fv(transLocation, false, matrixArray);
                         
