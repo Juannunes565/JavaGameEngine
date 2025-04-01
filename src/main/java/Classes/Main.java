@@ -12,14 +12,14 @@ import static org.lwjgl.opengl.GL30.*;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
+import glm.Glm;
+import glm.mat._4.Mat4;
+import glm.vec._4.Vec4;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
-public class Main {
-    
-    private static float[] textCoords = {
-        0.0f,  0.0f,
-        1.0f,  0.0f,
-        0.5f,  1.0f
-    };
+public class Main {    
     
     
     public static void main(String[] args) {
@@ -43,9 +43,9 @@ public class Main {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Establece el color de fondo
 
         float[] vertices = {                    
-             0.0f,  0.5f, 0.0f,    1.0f, 0.0f, 0.0f,     0.5f, 0.0f,
-            -0.5f, -0.5f, 0.0f,    0.0f, 1.0f, 0.0f,     0.0f, 1.0f,
-             0.5f, -0.5f, 0.0f,    0.0f, 0.0f, 1.0f,     1.0f, 1.0f 
+             0.0f,  0.5f, 0.0f,    0.5f, 0.0f,
+            -0.5f, -0.5f, 0.0f,    0.0f, 1.0f,
+             0.5f, -0.5f, 0.0f,    1.0f, 1.0f 
         };
         
 
@@ -61,14 +61,11 @@ public class Main {
         glBufferData(GL_ARRAY_BUFFER, verticesBuffer, GL_STATIC_DRAW);                      
 
         
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * Float.BYTES, 0);
-        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * Float.BYTES, 0);
+        glEnableVertexAttribArray(0);       
         
-        glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * Float.BYTES, 3 * Float.BYTES);
-        glEnableVertexAttribArray(1);
-        
-        glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
-        glEnableVertexAttribArray(2); 
+        glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * Float.BYTES, 3 * Float.BYTES);
+        glEnableVertexAttribArray(1); 
         
         
         //============Cargar textura===============
@@ -104,24 +101,31 @@ public class Main {
             // Liberar la imagen en STB
             STBImage.stbi_image_free(image);
         }
+                        
         
-        
-        
-        
+        // Crear una matriz identidad
+        Matrix4f trans = new Matrix4f().identity();
 
+        trans.translate(0.0f, 0.0f, 0.0f);
+        trans.rotate((float) Math.toRadians(90.0), new Vector3f(0.0f, 0.0f, 1.0f));
+        trans.scale(0.5f, 0.5f, 0.5f);
+        
         
         Shader newShader = new Shader("shaders\\shaderExample.vert", "shaders\\shaderExample.frag");
+                
+        float[] matrixArray = new float[16];
+        trans.get(matrixArray);
+        
         
         // Game Loop            
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
 
             glClear(GL_COLOR_BUFFER_BIT); 
-                                    
-            float greenValue = (float) ((Math.sin(glfwGetTime()) / 2.0f) + 0.5f);            
-            int vertexColorLocation = glGetUniformLocation(newShader.getID(), "ourColor");
-            glUseProgram(newShader.getID());            
-            glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 0.0f);
+                                                                        
+            glUseProgram(newShader.getID());                        
+            int transLocation = glGetUniformLocation(newShader.getID(), "transform");        
+            glUniformMatrix4fv(transLocation, false, matrixArray);
                         
             glBindVertexArray(VAO);
             glDrawArrays(GL_TRIANGLES, 0, 3);

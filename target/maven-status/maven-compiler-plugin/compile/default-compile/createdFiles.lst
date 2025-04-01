@@ -1,2 +1,4 @@
 Classes\Main.class
+Classes\Model.class
 Classes\Texture.class
+Classes\Shader.class
